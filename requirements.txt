@@ -1,0 +1,16 @@
+streamlit==1.31.0
+langchain-core==0.1.23
+langchain-community==0.0.20
+langchain-google-genai==1.0.1
+google-generativeai==0.3.2
+beautifulsoup4==4.12.3
+lxml==5.1.0
+html5lib==1.1
+requests==2.31.0
+urllib3==2.2.0
+toml==0.10.2
+regex==2023.12.25
+
+# Optional but Recommended for Production
+# python-dotenv==1.0.1  # Alternative to toml for env vars
+# gunicorn==21.2.0  # For production deployment (if needed)
