@@ -37,28 +37,46 @@ class CompanyAnalyzer:
         
         # Define prompt template
         self.prompt_extract = PromptTemplate.from_template(
-            """
-### SCRAPED TEXT FROM WEBSITE:
-{clean_data}
-### INSTRUCTION:
+            """SCRAPED TEXT FROM WEBSITE:
 
-Text is from a company LinkedIn page.
+{clean_data}
+
+SOURCE LINKS:
+
+{
+"input_url": "{url}",
+"company_url": "{company_url_if_available}"
+}
+
+INSTRUCTION:
+
+Text may come from a LinkedIn company page OR job post.
+
+RULE:
+
+If input is a job post, first infer/extract the company and evaluate the company eligibility using the job + company info.
+
+If input is a company page, evaluate directly.
+
 TASK: Check if ALL conditions are met.
+
 INDUSTRY: SaaS, FinTech, HealthTech, RetailTech, EdTech, AI startups, Automation firms, Manufacturing, Automotive AI
 COMPANY SIZE: 50–500 employees OR funded startup (Seed–Series C)
 LOCATIONS: US(Silicon Valley, Austin, NY, Boston), India(Bangalore, Hyderabad, Gurgaon)
 DECISION MAKERS: Founder/Co-Founder, CTO, VP Engineering, Head of AI/Innovation
 INTENT: Hiring AI/ML, funding raised, AI features launched, AI adoption/pilots
 
-### OUTPUT RULES:
+OUTPUT RULES:
 
 If ALL matched → output ONLY:
 yes
 Then JSON:
-{"industry_segments":[],"company_size":"","locations":[],"key_decision_makers":[],"intent_triggers":[]}
+{"industry_segments":[],"company_size":"","locations":[],"key_decision_makers":[],"intent_triggers":[],"company_link":"","job_link":""}
+
 If ANY fail → output ONLY:
 wrong
-NO extra text, explanation, or formatting outside rules.
+
+NO explanations, extra text, or formatting outside rules.
             """
         )
         
@@ -95,3 +113,4 @@ NO extra text, explanation, or formatting outside rules.
         except Exception as e:
 
             raise Exception(f"Error analyzing company: {str(e)}")
+
