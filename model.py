@@ -29,56 +29,97 @@ class CompanyAnalyzer:
         
         # Initialize Groq LLM with Llama 3.1 70B
         self.llm = ChatGroq(
-            model="llama-3.3-70b-versatile",
-            api_key=self.api_key,
-            temperature=0.1,
-            max_tokens=2000
-        )
+    model="llama-3.3-70b-versatile",
+    api_key=self.api_key,
+    temperature=0.0,
+    max_tokens=800
+)
+
         
         # Define prompt template
         self.prompt_extract = PromptTemplate.from_template(
-            """SCRAPED TEXT FROM WEBSITE:
-
+    """INPUT:
+SCRAPED TEXT:
 {clean_data}
 
-SOURCE LINKS:
+ROLE:
+You are a STRICT rule-based validator.
+You must NOT infer, estimate, paraphrase, or assume.
+Accept ONLY what is explicitly stated in the input text.
 
-{
-"input_url": "{url}",
-"company_url": "{company_url_if_available}"
-}
+If ANY rule fails, output "wrong".
+Only if ALL rules pass, output "yes".
 
-INSTRUCTION:
+--------------------------------
+INDUSTRY (REQUIRED — AT LEAST ONE):
 
-Text may come from a LinkedIn company page OR job post.
+The input text must contain AT LEAST ONE of the following
+EXACT, CASE-INSENSITIVE KEYWORDS:
 
-RULE:
+Software
+IT Services
+SaaS
+Technology
+FinTech
+HealthTech
+AI
+Automation
+E-commerce
 
-If input is a job post, first infer/extract the company and evaluate the company eligibility using the job + company info.
+--------------------------------
+COMPANY SIZE (MANDATORY — HARD RULE):
 
-If input is a company page, evaluate directly.
+ACCEPT ONLY IF AT LEAST ONE of the following EXACT PHRASES appears:
 
-TASK: Check if ALL conditions are met.
+- "51–200 employees"
+- "201–500 employees"
+- "501–1000 employees"
+- "funded startup"
+- "Seed"
+- "Series A"
+- "Series B"
+- "VC-backed"
 
-INDUSTRY: SaaS, FinTech, HealthTech, RetailTech, EdTech, AI startups, Automation firms, Manufacturing, Automotive AI
-COMPANY SIZE: 50–500 employees OR funded startup (Seed–Series C)
-LOCATIONS: US(Silicon Valley, Austin, NY, Boston), India(Bangalore, Hyderabad, Gurgaon)
-DECISION MAKERS: Founder/Co-Founder, CTO, VP Engineering, Head of AI/Innovation
-INTENT: Hiring AI/ML, funding raised, AI features launched, AI adoption/pilots
+IMMEDIATE REJECTION IF ANY of the following appear:
 
-OUTPUT RULES:
+- "1000+ employees"
+- "5000+ employees"
+- "10k+"
+- "enterprise"
+- "multinational"
+- "MNC"
+- "global workforce"
+- "large enterprise"
 
-If ALL matched → output ONLY:
-yes
-Then JSON:
-{"industry_segments":[],"company_size":"","locations":[],"key_decision_makers":[],"intent_triggers":[],"company_link":"","job_link":""}
+If neither acceptance nor rejection evidence is present → REJECT.
 
-If ANY fail → output ONLY:
-wrong
+--------------------------------
+LOCATION (REQUIRED — AT LEAST ONE):
 
-NO explanations, extra text, or formatting outside rules.
-            """
-        )
+The input text must explicitly mention AT LEAST ONE of:
+
+US:
+CA, TX, NY, MA, FL
+
+India:
+Bengaluru, Hyderabad, Pune, Gurgaon, Chennai, Mumbai, NCR
+
+Exact text match required. No inference.
+
+-----------------------------
+INTENT SIGNALS (MANDATORY):
+The input text must explicitly contain AT LEAST ONE keyword related to
+ServiceNow, AI/ML, or Web Development (e.g., "ServiceNow", "AI engineer",
+"machine learning", "Web developer", "Full stack developer").
+Generic hiring terms or unrelated automation references are NOT valid.
+No inference or assumption is allowed.
+
+Valid examples:
+- Company website
+- LinkedIn com
+"""
+)
+
         
         # Create chain
         self.chain = self.prompt_extract | self.llm
@@ -100,17 +141,23 @@ NO explanations, extra text, or formatting outside rules.
         except Exception as e:
             raise Exception(f"Error loading webpage: {str(e)}")
     
-    def analyze_company(self, url):
-        """Analyze company from LinkedIn URL"""
+    def analyze_company(self, company_url=None, job_url=None):
         try:
-            # Load and clean page
-            clean_text = self.load_and_clean_page(url)
-            
-            # Run analysis
+            texts = []
+
+            if company_url:
+                texts.append(self.load_and_clean_page(company_url))
+
+            if job_url:
+                texts.append(self.load_and_clean_page(job_url))
+
+            if not texts:
+                raise ValueError("No valid URL provided")
+
+            clean_text = "\n\n".join(texts)
+
             result = self.chain.invoke({"clean_data": clean_text})
-            
             return result.content
+
         except Exception as e:
-
             raise Exception(f"Error analyzing company: {str(e)}")
-
