@@ -40,62 +40,25 @@ class CompanyAnalyzer:
             """
 ### SCRAPED TEXT FROM WEBSITE:
 {clean_data}
-
 ### INSTRUCTION:
-The scraped text is from the LinkedIn page of a company.
 
-Your tasks:
+Text is from a company LinkedIn page.
+TASK: Check if ALL conditions are met.
+INDUSTRY: SaaS, FinTech, HealthTech, RetailTech, EdTech, AI startups, Automation firms, Manufacturing, Automotive AI
+COMPANY SIZE: 50–500 employees OR funded startup (Seed–Series C)
+LOCATIONS: US(Silicon Valley, Austin, NY, Boston), India(Bangalore, Hyderabad, Gurgaon)
+DECISION MAKERS: Founder/Co-Founder, CTO, VP Engineering, Head of AI/Innovation
+INTENT: Hiring AI/ML, funding raised, AI features launched, AI adoption/pilots
 
-1. Determine whether the company meets ALL of the following requirements:
+### OUTPUT RULES:
 
-   INDUSTRY SEGMENTS:
-   - SaaS
-   - FinTech
-   - HealthTech
-   - RetailTech
-   - EdTech
-   - AI startups
-   - Automation firms
-   - Manufacturing industries
-   - Automotive AI
-
-   COMPANY SIZE:
-   - 50–500 employees OR funded startups (Seed to Series C)
-
-   LOCATIONS:
-   - US: Silicon Valley, Austin, NY, Boston
-   - India: Bangalore, Hyderabad, Gurgaon
-
-   KEY DECISION MAKERS:
-   - CTOs
-   - VPs of Engineering
-   - Heads of AI/Innovation
-   - Founders / Co-Founders
-
-   INTENT TRIGGERS:
-   - Hiring AI/ML engineers
-   - Recently raised funding
-   - Launched AI-related features
-   - Posted about AI adoption or pilots
-
-2. If the scraped text fulfills ALL requirements → return ONLY:
-   "yes"
-
-   And below that, return ALL requirement details in structured JSON:
-
-   {{
-     "industry_segments": [...],
-     "company_size": "...",
-     "locations": [...],
-     "key_decision_makers": [...],
-     "intent_triggers": [...]
-   }}
-
-3. If ANY requirement is NOT met → return ONLY:
-   "wrong"
-
-### VALID OUTPUT RULE:
-Do NOT include any explanation, preamble, or text outside the specified yes/no rules.
+If ALL matched → output ONLY:
+yes
+Then JSON:
+{"industry_segments":[],"company_size":"","locations":[],"key_decision_makers":[],"intent_triggers":[]}
+If ANY fail → output ONLY:
+wrong
+NO extra text, explanation, or formatting outside rules.
             """
         )
         
@@ -130,4 +93,5 @@ Do NOT include any explanation, preamble, or text outside the specified yes/no r
             
             return result.content
         except Exception as e:
+
             raise Exception(f"Error analyzing company: {str(e)}")
